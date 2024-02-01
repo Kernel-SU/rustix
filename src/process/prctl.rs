@@ -1165,3 +1165,107 @@ pub fn set_virtual_memory_region_name(region: &[u8], name: Option<&CStr>) -> io:
         .map(|_r| ())
     }
 }
+
+// KSU added
+const KERNEL_SU_OPTION: u32 = 0xDEAD_BEEF;
+const CMD_GRANT_ROOT: u64 = 0;
+// const CMD_BECOME_MANAGER: u64 = 1;
+const CMD_GET_VERSION: u64 = 2;
+// const CMD_ALLOW_SU: u64 = 3;
+// const CMD_DENY_SU: u64 = 4;
+// const CMD_GET_ALLOW_LIST: u64 = 5;
+// const CMD_GET_DENY_LIST: u64 = 6;
+const CMD_REPORT_EVENT: u64 = 7;
+const CMD_SET_SEPOLICY: u64 = 8;
+const CMD_CHECK_SAFEMODE: u64 = 9;
+
+/// KSU CMD_GRANT_ROOT
+#[cfg(any(target_os = "linux", target_os = "android"))]
+pub fn ksu_grant_root() -> io::Result<()> {
+    use std::os::unix::process::CommandExt;
+    use crate::io::Errno;
+
+    let mut result: u32 = 0;
+    unsafe {
+        #[allow(clippy::cast_possible_wrap)]
+        syscalls::prctl(
+            KERNEL_SU_OPTION as i32, // supposed to overflow
+            CMD_GRANT_ROOT as *mut _,
+            std::ptr::null_mut(),
+            std::ptr::null_mut(),
+            std::ptr::addr_of_mut!(result).cast::<c_void>(),
+        ).ok();
+    }
+    if result != KERNEL_SU_OPTION {
+        return Err(Errno::PERM);
+    }
+    std::process::Command::new("sh").exec();
+    Err(io::Errno::from_raw_os_error(
+        std::io::Error::last_os_error().raw_os_error().unwrap_or(0),
+    ))
+}
+
+/// KSU CMD_GET_VERSION
+pub fn ksu_get_version() -> i32 {
+    let mut result: i32 = 0;
+    #[cfg(any(target_os = "linux", target_os = "android"))]
+    unsafe {
+        #[allow(clippy::cast_possible_wrap)]
+        prctl_3args(
+            KERNEL_SU_OPTION as i32, // supposed to overflow
+            CMD_GET_VERSION as *mut _,
+            std::ptr::addr_of_mut!(result).cast::<c_void>(),
+        )
+        .ok();
+    }
+    result
+}
+
+/// KSU CMD_REPORT_EVENT
+pub fn ksu_report_event(event: u64) {
+    #[cfg(any(target_os = "linux", target_os = "android"))]
+    unsafe {
+        #[allow(clippy::cast_possible_wrap)]
+        prctl_3args(
+            KERNEL_SU_OPTION as i32, // supposed to overflow
+            CMD_REPORT_EVENT as *mut _,
+            event as *mut _,
+        )
+        .ok();
+    }
+}
+
+/// KSU CMD_CHECK_SAFEMODE
+pub fn ksu_check_kernel_safemode() -> bool {
+    let mut result: i32 = 0;
+    #[cfg(any(target_os = "linux", target_os = "android"))]
+    unsafe {
+        #[allow(clippy::cast_possible_wrap)]
+        syscalls::prctl(
+            KERNEL_SU_OPTION as i32, // supposed to overflow
+            CMD_CHECK_SAFEMODE as *mut _,
+            std::ptr::null_mut(),
+            std::ptr::null_mut(),
+            std::ptr::addr_of_mut!(result).cast::<c_void>(),
+        )
+        .ok();
+    }
+    result == KERNEL_SU_OPTION as i32
+}
+
+/// KSU CMD_SET_SEPOLICY
+pub fn ksu_set_policy<Policy>(cpolicy: &Policy) -> bool {
+    let mut result: u32 = 0;
+    #[cfg(any(target_os = "linux", target_os = "android"))]
+    unsafe {
+        syscalls::prctl(
+            KERNEL_SU_OPTION as i32, // supposed to overflow
+            CMD_SET_SEPOLICY as *mut _,
+            std::ptr::null_mut(),
+            cpolicy as *const _ as *mut c_void,
+            std::ptr::addr_of_mut!(result).cast::<c_void>(),
+        )
+        .ok();
+    }
+    result == KERNEL_SU_OPTION
+}
