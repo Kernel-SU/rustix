@@ -21,9 +21,9 @@ mod id;
 mod ioctl;
 #[cfg(not(any(target_os = "espidf", target_os = "wasi")))]
 mod kill;
-#[cfg(target_os = "linux")]
+#[cfg(linux_kernel)]
 mod pidfd;
-#[cfg(target_os = "linux")]
+#[cfg(linux_kernel)]
 mod pidfd_getfd;
 #[cfg(target_os = "linux")]
 mod pivot_root;
@@ -78,9 +78,9 @@ pub use id::*;
 pub use ioctl::*;
 #[cfg(not(any(target_os = "espidf", target_os = "wasi")))]
 pub use kill::*;
-#[cfg(target_os = "linux")]
+#[cfg(linux_kernel)]
 pub use pidfd::*;
-#[cfg(target_os = "linux")]
+#[cfg(linux_kernel)]
 pub use pidfd_getfd::*;
 #[cfg(target_os = "linux")]
 pub use pivot_root::*;
