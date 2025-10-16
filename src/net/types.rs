@@ -570,7 +570,7 @@ impl AddressFamily {
     #[cfg(freebsdlike)]
     pub const ATM: Self = Self(c::AF_ATM as _);
     /// `AF_CAIF`
-    #[cfg(any(target_os = "android", target_os = "emscripten", target_os = "fuchsia"))]
+    #[cfg(any(target_os = "emscripten", target_os = "fuchsia"))]
     pub const CAIF: Self = Self(c::AF_CAIF as _);
     /// `AF_CCITT`
     #[cfg(any(bsd, solarish, target_os = "aix", target_os = "nto"))]
@@ -723,7 +723,6 @@ impl AddressFamily {
     #[cfg(any(
         bsd,
         solarish,
-        target_os = "android",
         target_os = "emscripten",
         target_os = "fuchsia",
         target_os = "haiku",

@@ -191,7 +191,7 @@ pub fn setdomainname(name: &[u8]) -> io::Result<()> {
 }
 
 /// Reboot command for use with [`reboot`].
-#[cfg(target_os = "linux")]
+#[cfg(linux_kernel)]
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 #[repr(i32)]
 #[non_exhaustive]
@@ -243,7 +243,7 @@ pub enum RebootCommand {
 ///  - [Linux]
 ///
 /// [Linux]: https://man7.org/linux/man-pages/man2/reboot.2.html
-#[cfg(target_os = "linux")]
+#[cfg(linux_kernel)]
 pub fn reboot(cmd: RebootCommand) -> io::Result<()> {
     backend::system::syscalls::reboot(cmd)
 }
